@@ -222,9 +222,19 @@ form.tf textarea{width:100%;min-height:80px;resize:vertical;line-height:1.5;font
 .imp-scroll{max-height:46vh;overflow:auto;border:1px solid var(--line);border-radius:10px}
 .imp-scroll table{margin:0}
 tr.dupr{opacity:.45}
+.selbar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;background:var(--surface-2);border:1px solid var(--line);border-radius:10px;padding:8px 12px;margin:4px 0 10px}
+.selbar[hidden]{display:none}
+.selbar .selall{display:flex;align-items:center;gap:7px;font-size:.85rem;cursor:pointer}
+.selbar .spacer{flex:1}
+.selbox{width:17px;height:17px;flex:none;cursor:pointer;accent-color:var(--accent)}
+.trow.selrow{cursor:pointer}
+.trow.selon{background:color-mix(in srgb,var(--accent) 10%,transparent);border-radius:8px}
+.trow.selrow .t-act{display:none}
 /* historial tipo tarjeta */
 .tlist{display:grid}
-.trow{display:grid;grid-template-columns:1fr auto;gap:7px 14px;padding:13px 2px;border-bottom:1px solid var(--line)}
+.trow{display:grid;grid-template-columns:1fr auto;gap:7px 14px;padding:13px 10px;margin:0 -8px;border-bottom:1px solid var(--line);border-radius:9px;cursor:pointer}
+.trow:hover{background:color-mix(in srgb,var(--accent) 5%,transparent)}
+.trow:focus-visible{outline:2px solid var(--accent);outline-offset:-2px}
 .trow:last-child{border-bottom:0}
 .t-main{display:flex;align-items:center;gap:9px;flex-wrap:wrap;min-width:0}
 .t-date{font-family:var(--f-mono);font-size:.82rem;color:var(--muted)}
@@ -232,20 +242,27 @@ tr.dupr{opacity:.45}
 .t-sess{font-size:.82rem;color:var(--muted)}
 .t-res{text-align:right;white-space:nowrap}
 .t-res .big{font-weight:700;font-size:1.02rem}
-.t-res .r{font-size:.78rem;margin-left:8px}
+.t-res .r{font-size:.9rem;font-weight:600;margin-left:9px}
 .t-sub{grid-column:1/-1;display:flex;align-items:center;gap:7px;flex-wrap:wrap}
 .t-risk{font-size:.78rem;color:var(--muted);font-family:var(--f-mono)}
 .hchip{font-size:.72rem;font-weight:700;padding:2px 9px;border-radius:999px;white-space:nowrap}
 .hchip.yes{color:var(--win);background:color-mix(in srgb,var(--win) 13%,transparent)}
 .hchip.no{color:var(--loss);background:color-mix(in srgb,var(--loss) 13%,transparent)}
-.hchip.cal{color:var(--ink);background:var(--surface-2);border:1px solid var(--line);min-width:22px;text-align:center}
+.hchip.grd{color:var(--ink);background:var(--surface-2);border:1px solid var(--line);min-width:22px;text-align:center}
 .hchip.stg{color:var(--accent);background:color-mix(in srgb,var(--accent) 14%,transparent)}
 .hchip.warn{color:var(--warn);background:color-mix(in srgb,var(--warn) 14%,transparent)}
-.t-note{grid-column:1/-1;font-size:.84rem;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:100%}
-.t-note.open{white-space:pre-wrap;overflow:visible;text-overflow:clip;word-break:break-word}
-.t-more{grid-column:1/-1;justify-self:start;background:none;border:0;padding:0;margin-top:-3px;color:var(--accent);font:inherit;font-size:.78rem;font-weight:600;cursor:pointer}
-.t-more:hover{text-decoration:underline}
-.t-more[hidden]{display:none}
+.hchip.na{color:var(--muted);background:transparent;border:1px dashed var(--line);font-weight:600}
+.t-note{grid-column:1/-1;font-size:.84rem;color:var(--muted);white-space:pre-wrap;word-break:break-word;max-width:100%;max-height:168px;overflow-y:auto;padding-right:6px}
+.t-note::-webkit-scrollbar{width:7px}
+.t-note::-webkit-scrollbar-thumb{background:var(--line);border-radius:4px}
+.t-noteflag{color:var(--muted);font-size:.82rem;opacity:.7}
+.t-caret{display:inline-block;margin-left:11px;color:var(--muted);font-size:.7rem;transition:transform .15s;vertical-align:middle}
+.trow.open .t-caret{transform:rotate(180deg);color:var(--accent)}
+/* Acordeón: la fila va compacta y se expande al tocarla (muestra nota y acciones). */
+.trow .t-note,.trow .t-act{display:none}
+.trow.open .t-note{display:block}
+.trow.open .t-act{display:flex}
+.trow.open{background:color-mix(in srgb,var(--accent) 6%,transparent)}
 .t-act{grid-column:1/-1;display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin-top:1px}
 .t-act .spacer{flex:1}
 .t-act .b{font:inherit;font-size:.78rem;font-weight:600;border:1px solid var(--line);background:var(--surface-2);color:var(--ink);border-radius:7px;padding:5px 11px;cursor:pointer;text-decoration:none;display:inline-flex;align-items:center}
@@ -446,8 +463,15 @@ td.r,th.r{text-align:right}
       </form>
     </div>
     <div class="panel">
-      <div class="risk-head"><h2>Historial</h2><div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap"><span class="muted" id="tradeCount"></span><button type="button" class="btn-small" id="impOpen" title="Importar operaciones desde un informe de MetaTrader">⇅ Importar de MetaTrader</button></div></div>
+      <div class="risk-head"><h2>Historial</h2><div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap"><span class="muted" id="tradeCount"></span><button type="button" class="btn-small" id="selToggle" title="Seleccionar varias para borrar">☑ Seleccionar</button><button type="button" class="btn-small" id="impOpen" title="Importar operaciones desde un informe de MetaTrader">⇅ Importar de MetaTrader</button></div></div>
       <input type="file" id="impFile" accept=".html,.htm" hidden>
+      <div class="selbar" id="selBar" hidden>
+        <label class="selall"><input type="checkbox" id="selAll"> Seleccionar todas</label>
+        <span class="spacer"></span>
+        <span class="muted num" id="selCount">0 seleccionadas</span>
+        <button type="button" class="btn-small" id="selDelete" disabled>Eliminar</button>
+        <button type="button" class="btn-small btn-ghost" id="selCancel">Cancelar</button>
+      </div>
       <div class="tlist" id="tradeRows"></div>
       <div class="pager" id="tradePager"></div>
     </div>
@@ -595,7 +619,7 @@ td.r,th.r{text-align:right}
     <div class="alert" id="licMsg" role="alert" hidden></div>
     <div style="text-align:center"><button type="button" class="btn-small btn-ghost" id="licDiag" style="font-size:.78rem">Ver diagnóstico</button></div>
     <pre id="licDiagOut" style="display:none;white-space:pre-wrap;font-size:.72rem;background:var(--surface-2);border:1px solid var(--line);border-radius:8px;padding:10px;margin:0;overflow:auto"></pre>
-    <p class="pv-note">EdgeJournal © 2026 · Licencia de uso personal e intransferible (ver LICENCIA.txt). <strong>Versión 2 · 2026-10-13 · build 18</strong></p>
+    <p class="pv-note">EdgeJournal © 2026 · Licencia de uso personal e intransferible (ver LICENCIA.txt). <strong>Versión 2 · 2026-10-13 · build 24</strong></p>
   </div>
 </div>
 <div class="toast" id="toast" hidden></div>
@@ -766,7 +790,7 @@ function showGate(j){
   $('#licGate').hidden=false;$('#licMachine').textContent=j.machine||'—';if(!j.machine){$('#licReason').textContent='No se pudo leer el código de esta computadora. Abrí el diario con "Abrir diario.bat".'}
   $('#licReason').textContent=LIC_REASONS[(j.license||{}).reason]||LIC_REASONS.missing;
   // Diagnóstico automático: ayuda a ver por qué no activa.
-  (async()=>{try{const g=$('#licDiagOut');if(!g)return;const d=await api('diag');g.textContent='DIAGNÓSTICO (build 18)\n'+JSON.stringify(d,null,2);g.style.display='block'}catch(e){}})();
+  (async()=>{try{const g=$('#licDiagOut');if(!g)return;const d=await api('diag');g.textContent='DIAGNÓSTICO (build 24)\n'+JSON.stringify(d,null,2);g.style.display='block'}catch(e){}})();
 }
 let CUR_LIC='';
 function showErr(m){const b=document.getElementById('connErr');b.textContent=m;b.hidden=!m}
@@ -1028,17 +1052,8 @@ function equitySVG(tr){
   </svg>`;
 }
 
-// Muestra el "ver más" solo en las notas que realmente se cortan (una línea larga) o tienen varias líneas.
-function markNotesOverflow(){
-  document.querySelectorAll('#tradeRows .t-note').forEach(n=>{
-    const b=n.nextElementSibling;
-    if(!b||!b.hasAttribute('data-notemore'))return;
-    if(n.classList.contains('open')){b.hidden=false;return}   // ya desplegada: dejar el botón
-    const clipped=n.scrollWidth>n.clientWidth+1;
-    const multiline=n.textContent.indexOf('\n')>=0;
-    b.hidden=!(clipped||multiline);
-  });
-}
+// Filas del historial desplegadas (acordeón). Se recuerda en memoria mientras dura la sesión.
+const openRows=new Set();
 function renderTrades(){
   const tr=S.trades.filter(inView).filter(inPeriod).sort((a,b)=>-seqSort(a,b)), afterL=afterLossSet(tr);
   $('#tradeCount').textContent=tr.length+' operaciones'+(VIEW.period!=='all'?' · '+(PERIOD_NAMES[VIEW.period]||'').toLowerCase():'');
@@ -1053,16 +1068,14 @@ function renderTrades(){
     <button class="btn-small" type="button" data-pg="next" ${VIEW.page===pages?'disabled':''}>Siguiente</button>
     <button class="btn-small" type="button" data-pg="last" ${VIEW.page===pages?'disabled':''} aria-label="Última página">»</button></span>`;
   $('#tradeRows').innerHTML=tr.length?shown.map(t=>{const a=acctById(t.accountId),r=rMult(t),lk=/^https?:\/\//i.test(t.link||'')?t.link:'',wout=inWindow(t)==='out',tgs=Array.isArray(t.tags)?t.tags:[],note=(t.note||'').trim();
-    return `<div class="trow">
-      <div class="t-main"><span class="t-date">${fmtDate(t.date)}${t.time?' · '+esc(t.time):''}</span><span class="t-pair">${esc(t.pair)}</span><span class="tag ${t.side}">${t.side}</span>${esc(t.session)?`<span class="t-sess">${esc(t.session)}</span>`:''}${esc(a?a.name:'')&&S.accounts.length>1?`<span class="t-sess">· ${esc(a.name)}</span>`:''}${wout?'<span class="hchip warn" title="Fuera de tu horario">fuera de hora</span>':''}${afterL.has(t.id)?'<span class="hchip warn" title="La anterior de ese día fue una pérdida">tras pérdida</span>':''}</div>
-      <div class="t-res"><span class="big num ${cls(t.result)}">${money(t.result,true)}</span><span class="r num ${cls(r)}">${r>=0?'+':''}${r.toFixed(2)}R</span></div>
-      <div class="t-sub"><span class="t-risk">${t.risk}% · ${money(riskUsd(t))}</span>${t.plan===1?'<span class="hchip yes">Plan ✓</span>':t.plan===0?'<span class="hchip no">Sin plan</span>':''}${t.grade?`<span class="hchip cal">${esc(t.grade)}</span>`:''}${tgs.map(x=>`<span class="hchip stg">${esc(x)}</span>`).join('')}</div>
-      ${note?`<div class="t-note" title="${esc(note)}">${esc(note)}</div><button class="t-more" type="button" data-notemore hidden>ver más</button>`:''}
+    return `<div class="trow ${selMode?'selrow':''} ${selMode&&selIds.has(t.id)?'selon':''} ${!selMode&&openRows.has(t.id)?'open':''}" ${selMode?`data-selrow="${t.id}"`:`data-trow="${t.id}" tabindex="0" role="button" aria-expanded="${openRows.has(t.id)?'true':'false'}"`}>
+      <div class="t-main">${selMode?`<input type="checkbox" class="selbox" data-selid="${t.id}" ${selIds.has(t.id)?'checked':''}>`:''}<span class="t-date">${fmtDate(t.date)}${t.time?' · '+esc(t.time):''}</span><span class="t-pair">${esc(t.pair)}</span><span class="tag ${t.side}">${t.side}</span>${esc(t.session)?`<span class="t-sess">${esc(t.session)}</span>`:''}${esc(a?a.name:'')&&S.accounts.length>1?`<span class="t-sess">· ${esc(a.name)}</span>`:''}${wout?'<span class="hchip warn" title="Fuera de tu horario">fuera de hora</span>':''}${afterL.has(t.id)?'<span class="hchip warn" title="La anterior de ese día fue una pérdida">tras pérdida</span>':''}${note?'<span class="t-noteflag" title="Tiene nota">✎</span>':''}</div>
+      <div class="t-res"><span class="big num ${cls(t.result)}">${money(t.result,true)}</span><span class="r num ${cls(r)}">${r>=0?'+':''}${r.toFixed(2)}R</span>${selMode?'':'<span class="t-caret" aria-hidden="true">▾</span>'}</div>
+      <div class="t-sub"><span class="t-risk">${t.risk}% · ${money(riskUsd(t))}</span>${t.plan===1?'<span class="hchip yes">Plan ✓</span>':t.plan===0?'<span class="hchip no">Sin plan</span>':''}${t.grade?`<span class="hchip grd">${esc(t.grade)}</span>`:''}${tgs.map(x=>`<span class="hchip stg">${esc(x)}</span>`).join('')}${(t.plan==null&&!t.grade&&!tgs.length&&!note)?'<span class="hchip na" title="Todavía no le agregaste plan, calidad, etiquetas ni nota">sin analizar</span>':''}</div>
+      ${note?`<div class="t-note">${esc(note)}</div>`:''}
       <div class="t-act">${t.image?`<button class="b" data-imgview="${t.id}">📷 Captura</button>`:''}${lk?`<a class="b accent" href="${esc(lk)}" target="_blank" rel="noopener">Gráfico</a>`:''}<span class="spacer"></span><button class="b" data-tedit="${t.id}">Editar</button><button class="b ghost" data-del="trades" data-id="${t.id}">Eliminar</button></div>
     </div>`}).join('')
     :'<div class="empty" style="padding:20px 4px">Sin operaciones para esta cuenta en este período.</div>';
-  // El "ver más" se decide DESPUÉS del acomodo del navegador (si no, a veces mide mal)
-  requestAnimationFrame(markNotesOverflow);
   updatePreview();
 }
 
@@ -1323,11 +1336,19 @@ function parseMT(html){
     let k=100000; const mv=Math.abs(closeP-openP);
     if(mv>0&&volume>0&&profit!==0)k=Math.abs(profit)/(mv*volume);        // valor por unidad de precio, deducido de la operación (sirve para cualquier símbolo)
     const riskUsd=(sl>0&&openP>0)?Math.abs(openP-sl)*k*volume:0;
-    out.push({posId:String(posId),symbol,side:type==='sell'?'SELL':'BUY',date:openDT.slice(0,10).replace(/\./g,'-'),time:openDT.slice(11,16),volume,net,riskUsd});
+    out.push({posId:String(posId),symbol,side:type==='sell'?'SELL':'BUY',dt:openDT,volume,net,riskUsd});
   }
   return out;
 }
 let impData=[];
+// Convierte "AAAA.MM.DD HH:MM:SS" (hora del broker) a {date,time} aplicando un desfasaje en horas.
+function mtShift(raw,offH){
+  const m=String(raw||'').match(/^(\d{4})\.(\d{2})\.(\d{2})\s+(\d{2}):(\d{2})/); if(!m)return {date:'',time:''};
+  const d=new Date(Date.UTC(+m[1],+m[2]-1,+m[3],+m[4],+m[5]));
+  d.setUTCMinutes(d.getUTCMinutes()+Math.round((parseFloat(offH)||0)*60));
+  const p=n=>String(n).padStart(2,'0');
+  return {date:d.getUTCFullYear()+'-'+p(d.getUTCMonth()+1)+'-'+p(d.getUTCDate()),time:p(d.getUTCHours())+':'+p(d.getUTCMinutes())};
+}
 function existingExt(){return new Set(S.trades.map(t=>t.extId).filter(Boolean))}
 $('#impOpen').onclick=()=>$('#impFile').click();
 $('#impFile').onchange=async e=>{
@@ -1348,6 +1369,9 @@ function openImport(){
         `<select id="impRiskMode" style="width:auto;flex:none"><option value="fix">Riesgo fijo</option><option value="sl">Desde el SL del informe</option></select>`+
         `<span id="impPctWrap" style="display:inline-flex;gap:6px;align-items:center"><input type="number" id="impRiskPct" value="1" min="0.01" step="0.05" style="width:90px"><span class="muted">% por operación</span></span>`+
       `</div><span class="hint" id="impRiskHint" style="margin-top:4px"></span></div>`+
+    `<div class="field full"><span>Ajustar hora <span class="opt">(zona horaria del broker)</span></span>`+
+      `<div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap"><input type="number" id="impTz" value="${parseFloat(localStorage.getItem('mtj-imptz'))||0}" step="1" style="width:90px"><span class="muted">horas</span></div>`+
+      `<span class="hint" style="margin-top:4px">Las horas del informe son las del <strong>servidor del broker</strong>, no las de tu PC. Ajustá el desfasaje <strong>una sola vez</strong> mirando la vista previa —por ejemplo <strong>−6</strong> para que una entrada de la mañana figure <strong>09:46</strong> y no 15:46— y queda <strong>guardado</strong> para las próximas importaciones.</span></div>`+
     `<p class="hint" id="impSummary"></p>`+
     `<div class="tbl imp-scroll"><table class="rtable"><thead><tr><th>Fecha/Hora</th><th>Par</th><th>Lado</th><th class="r">Resultado</th><th class="r">R</th><th class="r">Estado</th></tr></thead><tbody id="impRows"></tbody></table></div>`+
     `<p class="hint">Se importan par, lado, fecha/hora y resultado neto (beneficio + comisión + swap). Después agregás plan, calidad, etiquetas y nota a cada una.</p>`;
@@ -1359,11 +1383,13 @@ function openImport(){
     $('#impRiskHint').textContent=mode==='fix'
       ?'Se aplica ese % a todas. Para las que arriesgaste distinto, editás esas pocas después.'
       :'Usa el stop del informe. Si moviste el stop (breakeven/trailing) o cerraste antes, puede no reflejar tu riesgo inicial.';
+    const off=parseFloat($('#impTz').value)||0; try{localStorage.setItem('mtj-imptz',String(off))}catch(e){}
     let nnew=0;
     $('#impRows').innerHTML=impData.map(t=>{
       const dup=ex.has(t.posId); if(!dup)nnew++;
       const ru=mode==='fix'?init*pct/100:t.riskUsd, R=ru?t.net/ru:0, has=mode==='fix'?pct>0:!!t.riskUsd;
-      return `<tr class="${dup?'dupr':''}"><td class="num">${fmtDate(t.date)} ${esc(t.time)}</td><td><strong>${esc(t.symbol)}</strong></td><td><span class="tag ${t.side}">${t.side}</span></td><td class="r num ${cls(t.net)}">${money(t.net,true)}</td><td class="r num ${cls(R)}">${has?((R>=0?'+':'')+R.toFixed(2)+'R'):'—'}</td><td class="r">${dup?'<span class="muted">ya existe</span>':'<span class="pos">nueva</span>'}</td></tr>`;
+      const dd=mtShift(t.dt,off);
+      return `<tr class="${dup?'dupr':''}"><td class="num">${fmtDate(dd.date)} ${esc(dd.time)}</td><td><strong>${esc(t.symbol)}</strong></td><td><span class="tag ${t.side}">${t.side}</span></td><td class="r num ${cls(t.net)}">${money(t.net,true)}</td><td class="r num ${cls(R)}">${has?((R>=0?'+':'')+R.toFixed(2)+'R'):'—'}</td><td class="r">${dup?'<span class="muted">ya existe</span>':'<span class="pos">nueva</span>'}</td></tr>`;
     }).join('');
     $('#impSummary').innerHTML=`<strong>${impData.length}</strong> operaciones · <strong class="pos">${nnew} nuevas</strong>${impData.length-nnew?` · ${impData.length-nnew} ya existen (se omiten)`:''}. Cuenta: <strong>${esc(a?a.name:'')}</strong> (${money(init)}).`;
     const go=$('#impGo'); if(go){go.disabled=!nnew;go.textContent=nnew?`Importar ${nnew} ${nnew===1?'operación':'operaciones'}`:'Nada nuevo para importar'}
@@ -1373,6 +1399,7 @@ function openImport(){
   $('#impAcct').onchange=recompute;
   $('#impRiskMode').onchange=recompute;
   $('#impRiskPct').oninput=recompute;
+  $('#impTz').oninput=recompute;
   $('#impCancel').onclick=closeImport;
   $('#impGo').onclick=doImport;
 }
@@ -1384,15 +1411,58 @@ async function doImport(){
   const ex=existingExt(), nuevos=impData.filter(t=>!ex.has(t.posId));
   if(!nuevos.length){closeImport();return}
   const go=$('#impGo'); go.disabled=true; go.textContent='Importando…';
-  const mode=$('#impRiskMode').value, pct=parseFloat($('#impRiskPct').value)||0;
+  const mode=$('#impRiskMode').value, pct=parseFloat($('#impRiskPct').value)||0, off=parseFloat($('#impTz').value)||0;
   let ok=0;
   for(const t of nuevos){
     const risk=mode==='fix'?pct:((a.initial&&t.riskUsd)?Math.round(t.riskUsd/a.initial*100*100)/100:0);
-    try{await api('save_trade',{id:uid(),accountId:a.id,date:t.date,time:t.time,pair:t.symbol,session:'',side:t.side,risk,result:t.net,note:'',plan:null,grade:'',link:'',tags:[],image:'',extId:t.posId}); ok++}catch(e){}
+    const dd=mtShift(t.dt,off);
+    try{await api('save_trade',{id:uid(),accountId:a.id,date:dd.date,time:dd.time,pair:t.symbol,session:'',side:t.side,risk,result:t.net,note:'',plan:null,grade:'',link:'',tags:[],image:'',extId:t.posId}); ok++}catch(e){}
   }
   await refresh(); closeImport();
   toast(ok+' '+(ok===1?'operación importada':'operaciones importadas'));
 }
+
+/* ===== Selección múltiple en el historial (borrar varias de una) ===== */
+let selMode=false; const selIds=new Set();
+function filteredTradeIds(){return S.trades.filter(inView).filter(inPeriod).map(t=>t.id)}
+function updateSelBar(){
+  const n=selIds.size; $('#selCount').textContent=n+' '+(n===1?'seleccionada':'seleccionadas');
+  const d=$('#selDelete'); if(d){d.disabled=!n; if(!d.classList.contains('armed'))d.textContent=n?('Eliminar '+n):'Eliminar'}
+  const all=filteredTradeIds(); const sa=$('#selAll'); if(sa)sa.checked=all.length>0&&all.every(id=>selIds.has(id));
+}
+function enterSel(){selMode=true;selIds.clear();$('#selBar').hidden=false;$('#selToggle').textContent='✕ Salir';renderTrades();updateSelBar()}
+function exitSel(){selMode=false;selIds.clear();$('#selBar').hidden=true;$('#selToggle').textContent='☑ Seleccionar';renderTrades()}
+if($('#selToggle'))$('#selToggle').onclick=()=>selMode?exitSel():enterSel();
+if($('#selCancel'))$('#selCancel').onclick=exitSel;
+if($('#selAll'))$('#selAll').onchange=e=>{const all=filteredTradeIds();if(e.target.checked)all.forEach(id=>selIds.add(id));else selIds.clear();renderTrades();updateSelBar()};
+if($('#selDelete'))$('#selDelete').onclick=async e=>{
+  const b=e.target;
+  if(!b.classList.contains('armed')){if(!selIds.size)return;b.classList.add('armed');b.textContent='¿Eliminar '+selIds.size+'? Tocá otra vez';setTimeout(()=>{if(b.isConnected){b.classList.remove('armed');updateSelBar()}},3500);return}
+  b.classList.remove('armed');const ids=[...selIds];b.disabled=true;b.textContent='Eliminando…';
+  for(const id of ids){try{await api('delete',{kind:'trades',id})}catch(err){}}
+  await refresh();exitSel();toast(ids.length+' '+(ids.length===1?'operación eliminada':'operaciones eliminadas'));
+};
+function toggleRow(row){const id=row.dataset.trow,op=row.classList.toggle('open');op?openRows.add(id):openRows.delete(id);row.setAttribute('aria-expanded',op?'true':'false')}
+// Teclado: Enter o barra espaciadora abren/cierran la fila enfocada (accesibilidad).
+$('#tradeRows').addEventListener('keydown',e=>{
+  if(selMode||(e.key!=='Enter'&&e.key!==' '))return;
+  const row=e.target.closest('[data-trow]');
+  if(!row||e.target!==row)return;   // solo cuando el foco está en la fila, no en un botón interno
+  e.preventDefault(); toggleRow(row);
+});
+$('#tradeRows').addEventListener('click',e=>{
+  if(!selMode){
+    if(e.target.closest('button,a,input,.t-act'))return;   // no desplegar al tocar un botón/acción
+    const row=e.target.closest('[data-trow]'); if(!row)return;
+    toggleRow(row);
+    return;
+  }
+  const cb=e.target.closest('.selbox');
+  if(cb){const id=cb.dataset.selid;cb.checked?selIds.add(id):selIds.delete(id);const row=cb.closest('[data-selrow]');row&&row.classList.toggle('selon',cb.checked);updateSelBar();return}
+  const row=e.target.closest('[data-selrow]');
+  if(row&&!e.target.closest('button,a,input')){const id=row.dataset.selrow;const now=!selIds.has(id);now?selIds.add(id):selIds.delete(id);const box=row.querySelector('.selbox');if(box)box.checked=now;row.classList.toggle('selon',now);updateSelBar()}
+});
+
 renderTagChips();
 
 /* ---------- cuentas y retiros ---------- */
@@ -1427,16 +1497,13 @@ document.addEventListener('click',e=>{
     run('save_account',{...a,status:to},to==='archived'?'Cuenta archivada: su historial queda guardado':'Cuenta reactivada');return}
   const iv=e.target.closest('[data-imgview]');
   if(iv){const tt=S.trades.find(x=>x.id===iv.dataset.imgview);if(tt&&tt.image)openLightbox(tt.image);return}
-  const nm=e.target.closest('[data-notemore]');
-  if(nm){const n=nm.previousElementSibling;if(n&&n.classList.contains('t-note')){const op=n.classList.toggle('open');nm.textContent=op?'ver menos':'ver más'}return}
   const et=e.target.closest('[data-tedit]');
   if(et){startEditTrade(et.dataset.tedit);return}
   const ed=e.target.closest('[data-edit]');
   if(ed){const a=acctById(ed.dataset.edit);editing=a.id;$('#aName').value=a.name;$('#aFirm').value=a.firm||'';$('#aInit').value=a.initial;$('#aDaily').value=a.daily;$('#aWeekly').value=a.weekly;$('#aDD').value=a.maxdd;$('#aDDType').value=a.ddType||'static';$('#aType').value=a.type||'Fondeada';$('#aCounts').checked=a.counts!==false;$('#aTarget').value=a.target||'';
     $('#acctFormTitle').textContent='Editar cuenta';$('#acctSubmit').textContent='Guardar cambios';$('#acctCancel').hidden=false;$('#aName').focus()}
 });
-function setTab(t){VIEW.tab=t;saveView();renderPeriod();$$('nav.tabs button').forEach(b=>b.setAttribute('aria-selected',b.dataset.tab===t));['dash','trades','cal','accts','cfg'].forEach(x=>$('#tab-'+x).hidden=x!==t);if(t==='trades')requestAnimationFrame(markNotesOverflow)}
-let __noteRz;window.addEventListener('resize',()=>{clearTimeout(__noteRz);__noteRz=setTimeout(markNotesOverflow,150)});
+function setTab(t){VIEW.tab=t;saveView();renderPeriod();$$('nav.tabs button').forEach(b=>b.setAttribute('aria-selected',b.dataset.tab===t));['dash','trades','cal','accts','cfg'].forEach(x=>$('#tab-'+x).hidden=x!==t)}
 $$('nav.tabs button').forEach(b=>b.onclick=()=>setTab(b.dataset.tab));
 $('#quickAdd').onclick=()=>{setTab('trades');setTimeout(()=>$('#tPair').focus(),0)};
 $('#licCopy').onclick=()=>{const t=$('#licMachine').textContent;const sel=()=>{const r=document.createRange();r.selectNodeContents($('#licMachine'));const s=getSelection();s.removeAllRanges();s.addRange(r);toast('Código seleccionado: copialo con Ctrl+C')};
