@@ -1343,24 +1343,36 @@ function openImport(){
   if(!accts.length){toast('Primero creá una cuenta para importar las operaciones.');return}
   $('#impBody').innerHTML=
     `<label class="field full"><span>Importar a la cuenta</span><select id="impAcct">${accts.map(a=>`<option value="${a.id}">${esc(a.name)}</option>`).join('')}</select></label>`+
+    `<div class="field full"><span>Riesgo por operación</span>`+
+      `<div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">`+
+        `<select id="impRiskMode" style="width:auto;flex:none"><option value="fix">Riesgo fijo</option><option value="sl">Desde el SL del informe</option></select>`+
+        `<span id="impPctWrap" style="display:inline-flex;gap:6px;align-items:center"><input type="number" id="impRiskPct" value="1" min="0.01" step="0.05" style="width:90px"><span class="muted">% por operación</span></span>`+
+      `</div><span class="hint" id="impRiskHint" style="margin-top:4px"></span></div>`+
     `<p class="hint" id="impSummary"></p>`+
-    `<div class="tbl imp-scroll"><table class="rtable"><thead><tr><th>Fecha/Hora</th><th>Par</th><th>Lado</th><th class="r">Resultado</th><th class="r">R real</th><th class="r">Estado</th></tr></thead><tbody id="impRows"></tbody></table></div>`+
-    `<p class="hint">Se importan par, lado, fecha/hora y resultado neto (beneficio + comisión + swap). La R se calcula desde tu stop (SL). Después podés agregar plan, calidad, etiquetas y nota a cada una.</p>`;
+    `<div class="tbl imp-scroll"><table class="rtable"><thead><tr><th>Fecha/Hora</th><th>Par</th><th>Lado</th><th class="r">Resultado</th><th class="r">R</th><th class="r">Estado</th></tr></thead><tbody id="impRows"></tbody></table></div>`+
+    `<p class="hint">Se importan par, lado, fecha/hora y resultado neto (beneficio + comisión + swap). Después agregás plan, calidad, etiquetas y nota a cada una.</p>`;
   $('#impModal').hidden=false;
   const recompute=()=>{
     const a=acctById($('#impAcct').value), init=a?a.initial:0, ex=existingExt();
+    const mode=$('#impRiskMode').value, pct=parseFloat($('#impRiskPct').value)||0;
+    $('#impPctWrap').style.display=mode==='fix'?'inline-flex':'none';
+    $('#impRiskHint').textContent=mode==='fix'
+      ?'Se aplica ese % a todas. Para las que arriesgaste distinto, editás esas pocas después.'
+      :'Usa el stop del informe. Si moviste el stop (breakeven/trailing) o cerraste antes, puede no reflejar tu riesgo inicial.';
     let nnew=0;
     $('#impRows').innerHTML=impData.map(t=>{
       const dup=ex.has(t.posId); if(!dup)nnew++;
-      const R=t.riskUsd?t.net/t.riskUsd:0;
-      return `<tr class="${dup?'dupr':''}"><td class="num">${fmtDate(t.date)} ${esc(t.time)}</td><td><strong>${esc(t.symbol)}</strong></td><td><span class="tag ${t.side}">${t.side}</span></td><td class="r num ${cls(t.net)}">${money(t.net,true)}</td><td class="r num ${cls(R)}">${t.riskUsd?((R>=0?'+':'')+R.toFixed(2)+'R'):'—'}</td><td class="r">${dup?'<span class="muted">ya existe</span>':'<span class="pos">nueva</span>'}</td></tr>`;
+      const ru=mode==='fix'?init*pct/100:t.riskUsd, R=ru?t.net/ru:0, has=mode==='fix'?pct>0:!!t.riskUsd;
+      return `<tr class="${dup?'dupr':''}"><td class="num">${fmtDate(t.date)} ${esc(t.time)}</td><td><strong>${esc(t.symbol)}</strong></td><td><span class="tag ${t.side}">${t.side}</span></td><td class="r num ${cls(t.net)}">${money(t.net,true)}</td><td class="r num ${cls(R)}">${has?((R>=0?'+':'')+R.toFixed(2)+'R'):'—'}</td><td class="r">${dup?'<span class="muted">ya existe</span>':'<span class="pos">nueva</span>'}</td></tr>`;
     }).join('');
-    $('#impSummary').innerHTML=`<strong>${impData.length}</strong> operaciones en el archivo · <strong class="pos">${nnew} nuevas</strong>${impData.length-nnew?` · ${impData.length-nnew} ya existen (se omiten)`:''}. La R usa el saldo inicial de <strong>${esc(a?a.name:'')}</strong> (${money(init)}).`;
+    $('#impSummary').innerHTML=`<strong>${impData.length}</strong> operaciones · <strong class="pos">${nnew} nuevas</strong>${impData.length-nnew?` · ${impData.length-nnew} ya existen (se omiten)`:''}. Cuenta: <strong>${esc(a?a.name:'')}</strong> (${money(init)}).`;
     const go=$('#impGo'); if(go){go.disabled=!nnew;go.textContent=nnew?`Importar ${nnew} ${nnew===1?'operación':'operaciones'}`:'Nada nuevo para importar'}
   };
   $('#impFoot').innerHTML=`<button class="btn-small" type="button" id="impCancel">Cancelar</button><button class="btn-primary btn-small" type="button" id="impGo"></button>`;
   recompute();
   $('#impAcct').onchange=recompute;
+  $('#impRiskMode').onchange=recompute;
+  $('#impRiskPct').oninput=recompute;
   $('#impCancel').onclick=closeImport;
   $('#impGo').onclick=doImport;
 }
@@ -1372,9 +1384,10 @@ async function doImport(){
   const ex=existingExt(), nuevos=impData.filter(t=>!ex.has(t.posId));
   if(!nuevos.length){closeImport();return}
   const go=$('#impGo'); go.disabled=true; go.textContent='Importando…';
+  const mode=$('#impRiskMode').value, pct=parseFloat($('#impRiskPct').value)||0;
   let ok=0;
   for(const t of nuevos){
-    const risk=(a.initial&&t.riskUsd)?Math.round(t.riskUsd/a.initial*100*100)/100:0;
+    const risk=mode==='fix'?pct:((a.initial&&t.riskUsd)?Math.round(t.riskUsd/a.initial*100*100)/100:0);
     try{await api('save_trade',{id:uid(),accountId:a.id,date:t.date,time:t.time,pair:t.symbol,session:'',side:t.side,risk,result:t.net,note:'',plan:null,grade:'',link:'',tags:[],image:'',extId:t.posId}); ok++}catch(e){}
   }
   await refresh(); closeImport();
